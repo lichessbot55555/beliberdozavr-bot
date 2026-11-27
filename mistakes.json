@@ -1,5 +1,12 @@
 {
 "positions": {
+"0a6bfd7b6b29e085": {
+"bad": {
+"d6d7": 98986
+},
+"good": "d6e7",
+"seen": 1
+},
 "0fc8491debddd3f9": {
 "bad": {
 "g8h7": 243
@@ -14,19 +21,33 @@
 "good": "f1e1",
 "seen": 1
 },
+"299a6561d28b2546": {
+"bad": {
+"e8e3": 783
+},
+"good": "d6d5",
+"seen": 1
+},
+"2ce4a75cd41d709e": {
+"bad": {
+"b2c2": 218
+},
+"good": "b2a2",
+"seen": 1
+},
 "2d317546193363eb": {
 "bad": {
 "h7g7": 539
 },
-"good": "h7g8",
-"seen": 1
+"good": "h7h8",
+"seen": 2
 },
 "2f9596f82a669e1a": {
 "bad": {
 "g2h2": 207
 },
 "good": "g2d2",
-"seen": 1
+"seen": 2
 },
 "324265e8db6433e9": {
 "bad": {
@@ -42,12 +63,19 @@
 "good": "g1f1",
 "seen": 1
 },
+"3517bef9916bd46c": {
+"bad": {
+"g7f7": 189
+},
+"good": "g7d7",
+"seen": 1
+},
 "395c56e763da1757": {
 "bad": {
-"h4h3": 178
+"h4h3": 98435
 },
 "good": "d3e4",
-"seen": 1
+"seen": 2
 },
 "49217947070febdf": {
 "bad": {
@@ -68,27 +96,34 @@
 "g2f2": 379
 },
 "good": "g2g4",
-"seen": 1
+"seen": 2
 },
 "4d3533944872dda7": {
 "bad": {
 "g7g6": 189
 },
-"good": "e7d6",
-"seen": 1
+"good": "c8c6",
+"seen": 2
 },
 "51a1a91f0b30f878": {
 "bad": {
-"f2e3": 423
+"f2e3": 526
 },
 "good": "h3h4",
-"seen": 1
+"seen": 2
 },
 "544506934b59a7e4": {
 "bad": {
 "d4c4": 330
 },
 "good": "d4e5",
+"seen": 1
+},
+"54a8268cac983cbe": {
+"bad": {
+"d5d4": 199
+},
+"good": "h4h3",
 "seen": 1
 },
 "57e654f61fdb651e": {
@@ -100,10 +135,10 @@
 },
 "5da7d0a859a58760": {
 "bad": {
-"d6e7": 549
+"d6e7": 637
 },
-"good": "d8d7",
-"seen": 1
+"good": "g8g7",
+"seen": 2
 },
 "5f3994cd0ba3ac15": {
 "bad": {
@@ -119,6 +154,13 @@
 "good": "g1h2",
 "seen": 1
 },
+"7893f6ed8ea147e0": {
+"bad": {
+"h8h4": 155
+},
+"good": "c1a2",
+"seen": 1
+},
 "7ae8e05a5f849179": {
 "bad": {
 "g8e8": 97818
@@ -131,27 +173,41 @@
 "c4d3": 98303
 },
 "good": "d7f7",
+"seen": 2
+},
+"7bf35a84e0c99738": {
+"bad": {
+"e6e5": 160
+},
+"good": "e6e7",
 "seen": 1
 },
 "7d78da25156b7fcb": {
 "bad": {
 "g6f5": 422
 },
-"good": "a6a1",
-"seen": 1
+"good": "a6a4",
+"seen": 2
 },
 "866dbc3fe51a922f": {
 "bad": {
 "d4h4": 759
 },
-"good": "d4d2",
-"seen": 1
+"good": "c3c4",
+"seen": 2
 },
 "86e11479b047cfde": {
 "bad": {
 "g3h4": 98463
 },
-"good": "c6e5",
+"good": "g3f4",
+"seen": 2
+},
+"877762c70bbd43f4": {
+"bad": {
+"g4g5": 554
+},
+"good": "f2g3",
 "seen": 1
 },
 "87f34724ab5141f0": {
@@ -159,7 +215,7 @@
 "f5e6": 99159
 },
 "good": "b7c7",
-"seen": 1
+"seen": 2
 },
 "8e397ef5c354406a": {
 "bad": {
@@ -172,8 +228,8 @@
 "bad": {
 "b8b2": 490
 },
-"good": "b8d8",
-"seen": 1
+"good": "f7f6",
+"seen": 2
 },
 "9292707e28fb9cd9": {
 "bad": {
@@ -187,14 +243,14 @@
 "h2g3": 786
 },
 "good": "h2g1",
-"seen": 1
+"seen": 2
 },
 "9709689d96c3e9b2": {
 "bad": {
-"g8g7": 229
+"g8g7": 423
 },
 "good": "g8f8",
-"seen": 1
+"seen": 2
 },
 "98daa9df5b6f209f": {
 "bad": {
@@ -210,19 +266,26 @@
 "good": "c3d4",
 "seen": 1
 },
+"9ec7714e733ac506": {
+"bad": {
+"b1d1": 279
+},
+"good": "f7f5",
+"seen": 1
+},
 "9fc85b86de45430c": {
 "bad": {
-"a2a3": 289
+"a2a3": 393
 },
-"good": "h8g8",
-"seen": 1
+"good": "h8h7",
+"seen": 2
 },
 "afa0bb77a6909f7d": {
 "bad": {
 "c4d5": 326
 },
-"good": "c3c2",
-"seen": 1
+"good": "a5d5",
+"seen": 2
 },
 "b93f11c866adc475": {
 "bad": {
@@ -235,29 +298,29 @@
 "bad": {
 "b3b6": 268
 },
-"good": "h2g2",
-"seen": 1
+"good": "h2g3",
+"seen": 2
 },
 "b9ea166d1b2d12f8": {
 "bad": {
-"e3e6": 98797
+"e3e6": 99059
 },
 "good": "e3e4",
-"seen": 1
+"seen": 2
 },
 "bab4ceb8294bc8ec": {
 "bad": {
 "d4g7": 228
 },
-"good": "a8a7",
-"seen": 1
+"good": "a8a6",
+"seen": 2
 },
 "bc23d1c78386cfd9": {
 "bad": {
 "e4e3": 181
 },
 "good": "e7d7",
-"seen": 1
+"seen": 2
 },
 "c2a73301112d3369": {
 "bad": {
@@ -285,28 +348,35 @@
 "a8a6": 808
 },
 "good": "a8g8",
+"seen": 2
+},
+"d7af10ee9e064149": {
+"bad": {
+"a6a3": 98715
+},
+"good": "e5d6",
 "seen": 1
 },
 "da35d22b210f1eba": {
 "bad": {
-"c6d4": 97821
+"c6d4": 98104
 },
 "good": "d7f7",
-"seen": 1
+"seen": 2
 },
 "db916fc3cb43bbfc": {
 "bad": {
-"e4e5": 206
+"e4e5": 252
 },
 "good": "e4d4",
-"seen": 1
+"seen": 2
 },
 "e1d7817cf572cb03": {
 "bad": {
 "h4g3": 302
 },
 "good": "d7d6",
-"seen": 1
+"seen": 2
 },
 "e4412ac2f04874e7": {
 "bad": {
@@ -320,14 +390,21 @@
 "d1d7": 489
 },
 "good": "d1d8",
+"seen": 2
+},
+"ed2ae78669b1be78": {
+"bad": {
+"g4f4": 884
+},
+"good": "e6e8",
 "seen": 1
 },
 "f5f4cccbba245e32": {
 "bad": {
-"a1c1": 629
+"a1c1": 857
 },
 "good": "d1e1",
-"seen": 1
+"seen": 2
 },
 "f810a7ff9c4ca94a": {
 "bad": {
@@ -341,6 +418,13 @@
 "h2g2": 98895
 },
 "good": "h2h1",
+"seen": 2
+},
+"fab622b3056afa2a": {
+"bad": {
+"c2d3": 357
+},
+"good": "f7d7",
 "seen": 1
 },
 "fca2428fccd2600f": {
