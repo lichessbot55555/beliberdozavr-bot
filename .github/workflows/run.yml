@@ -53,10 +53,24 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Cache engines
+        uses: actions/cache@v4
+        with:
+          path: engines
+          key: engines-v3-${{ hashFiles('.github/workflows/run.yml') }}
+          restore-keys: |
+            engines-v3-
+
       - name: Setup Engines
         run: |
           set -euo pipefail
           mkdir -p engines
+          if [ -x engines/stockfish ] && [ -x engines/atomic-stockfish ] \
+             && [ -x engines/horde-stockfish ] && [ -x engines/fairy-stockfish ]; then
+            echo "Движки взяты из кеша"
+            ls -l engines
+            exit 0
+          fi
 
           # --- Stockfish: standard chess and chess960 ---
           # The binary is not stored in the repository, so fetch the official release
@@ -130,6 +144,129 @@ jobs:
           fi
 
           ls -l engines
+
+      - name: Download Fairy-Stockfish
+        run: |
+          set -uo pipefail
+          if [ -x engines/fairy-stockfish ]; then
+            echo "Fairy-Stockfish уже есть"
+            exit 0
+          fi
+          # Fairy-Stockfish — движок для вариантов без своей специализации
+          # (racing kings, fromPosition и любой другой, что появится в конфиге).
+          base="https://github.com/fairy-stockfish/Fairy-Stockfish/releases/download/fairy_sf_14"
+          for build in fairy-stockfish-largeboard_x86-64-bmi2 fairy-stockfish-largeboard_x86-64; do
+            echo "Trying ${build}"
+            if ! curl -fsSL --retry 3 --retry-delay 2 -o engines/fairy-stockfish "${base}/${build}"; then
+              echo "::warning::download failed for ${build}"
+              continue
+            fi
+            chmod +x engines/fairy-stockfish
+            if printf 'uci\nquit\n' | ./engines/fairy-stockfish > /tmp/fairy-uci.txt 2>/dev/null \
+               && grep -q 'var racingkings' /tmp/fairy-uci.txt; then
+              grep -m1 'id name' /tmp/fairy-uci.txt
+              echo "Using ${build}"
+              break
+            fi
+            echo "::warning::${build} does not run here"
+            rm -f engines/fairy-stockfish
+          done
+          if [ ! -x engines/fairy-stockfish ]; then
+            echo "::warning::Fairy-Stockfish недоступен, варианты без своего движка будут отключены."
+          fi
+
+      - name: Build variant engines
+        run: |
+          set -uo pipefail
+          # Специализированные движки под отдельные варианты. У них нет релизов,
+          # поэтому собираем из исходников; неудачная сборка не валит job —
+          # соответствующий вариант просто выключится на шаге Adapt config.
+          build_one() {
+            repo="$1"; out="$2"; variant="$3"
+            if [ -x "engines/${out}" ]; then
+              echo "${out}: уже есть"
+              return 0
+            fi
+            echo "=== Собираю ${repo} ==="
+            rm -rf "/tmp/build-${out}"
+            if ! git clone --depth 1 "https://github.com/Belzedar94/${repo}.git" "/tmp/build-${out}" > /dev/null 2>&1; then
+              echo "::warning::не удалось склонировать ${repo}"
+              return 1
+            fi
+            if ! make -C "/tmp/build-${out}/src" -j"$(nproc)" build ARCH=x86-64-avx2 > "/tmp/${out}-build.log" 2>&1; then
+              echo "::warning::сборка ${repo} не удалась"
+              tail -n 15 "/tmp/${out}-build.log"
+              return 1
+            fi
+            bin=$(find "/tmp/build-${out}" -maxdepth 3 -type f -size +1M -executable | head -n1)
+            if [ -z "${bin}" ]; then
+              echo "::warning::бинарник ${repo} не найден"
+              return 1
+            fi
+            install -m 755 "${bin}" "engines/${out}"
+            if printf 'uci\nquit\n' | "./engines/${out}" > "/tmp/${out}-uci.txt" 2>/dev/null \
+               && grep -qi "var ${variant}" "/tmp/${out}-uci.txt"; then
+              grep -m1 'id name' "/tmp/${out}-uci.txt"
+              return 0
+            fi
+            echo "::warning::${out} не поддерживает вариант ${variant}"
+            rm -f "engines/${out}"
+            return 1
+          }
+
+          build_one 3Check-Stockfish     threecheck-stockfish   3check
+          build_one KOTH-Stockfish       koth-stockfish         kingofthehill
+          build_one Antichess-Stockfish  antichess-stockfish    antichess
+          build_one Crazyhouse-Stockfish crazyhouse-stockfish  crazyhouse
+
+          echo "--- итог ---"
+          ls -l engines
+
+      - name: Adapt config to available engines
+        run: |
+          python3 << 'EOF'
+          import os, yaml
+
+          ENGINES = {
+              "atomic": "engines/atomic-stockfish",
+              "horde": "engines/horde-stockfish",
+              "antichess": "engines/antichess-stockfish",
+              "crazyhouse": "engines/crazyhouse-stockfish",
+              "threecheck": "engines/threecheck-stockfish",
+              "kingofthehill": "engines/koth-stockfish",
+              "racingkings": "engines/fairy-stockfish",
+              "variants": "engines/fairy-stockfish",
+          }
+          VARIANT_TO_ENGINE = {
+              "atomic": "atomic",
+              "horde": "horde",
+              "antichess": "antichess",
+              "crazyhouse": "crazyhouse",
+              "threeCheck": "threecheck",
+              "kingOfTheHill": "kingofthehill",
+              "racingKings": "racingkings",
+          }
+
+          cfg = yaml.safe_load(open("config.yml", encoding="utf-8"))
+          engines = cfg["engines"]
+          dropped = [k for k, path in ENGINES.items() if k in engines and not os.path.exists(path)]
+          for key in dropped:
+              engines.pop(key, None)
+
+          variants = []
+          for v in cfg["challenge"]["variants"]:
+              if v in ("standard", "chess960") or VARIANT_TO_ENGINE.get(v, v) in engines:
+                  variants.append(v)
+          cfg["challenge"]["variants"] = variants
+
+          with open("config.yml", "w", encoding="utf-8") as f:
+              yaml.dump(cfg, f, default_flow_style=False, allow_unicode=True)
+
+          print("движки:", ", ".join(sorted(engines)))
+          print("варианты:", ", ".join(variants))
+          if dropped:
+              print("::warning::движки недоступны, отключены:", ", ".join(dropped))
+          EOF
 
       - name: Inject Lichess Bot Token
         env:
