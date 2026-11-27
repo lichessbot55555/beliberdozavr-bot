@@ -1,1 +1,355 @@
-﻿{"version": 1, "positions": {}}
+{
+"positions": {
+"0fc8491debddd3f9": {
+"bad": {
+"g8h7": 243
+},
+"good": "f7f5",
+"seen": 1
+},
+"2083d8757a329395": {
+"bad": {
+"f1b1": 303
+},
+"good": "f1e1",
+"seen": 1
+},
+"2d317546193363eb": {
+"bad": {
+"h7g7": 539
+},
+"good": "h7g8",
+"seen": 1
+},
+"2f9596f82a669e1a": {
+"bad": {
+"g2h2": 207
+},
+"good": "g2d2",
+"seen": 1
+},
+"324265e8db6433e9": {
+"bad": {
+"e1e8": 98262
+},
+"good": "d1d7",
+"seen": 1
+},
+"3307514ccda09ae6": {
+"bad": {
+"b6f6": 363
+},
+"good": "g1f1",
+"seen": 1
+},
+"395c56e763da1757": {
+"bad": {
+"h4h3": 178
+},
+"good": "d3e4",
+"seen": 1
+},
+"49217947070febdf": {
+"bad": {
+"d1d2": 171
+},
+"good": "b7b2",
+"seen": 1
+},
+"4ac2b38c775954ff": {
+"bad": {
+"c3e2": 202
+},
+"good": "g3h4",
+"seen": 1
+},
+"4ce1e485b8bf9e43": {
+"bad": {
+"g2f2": 379
+},
+"good": "g2g4",
+"seen": 1
+},
+"4d3533944872dda7": {
+"bad": {
+"g7g6": 189
+},
+"good": "e7d6",
+"seen": 1
+},
+"51a1a91f0b30f878": {
+"bad": {
+"f2e3": 423
+},
+"good": "h3h4",
+"seen": 1
+},
+"544506934b59a7e4": {
+"bad": {
+"d4c4": 330
+},
+"good": "d4e5",
+"seen": 1
+},
+"57e654f61fdb651e": {
+"bad": {
+"d7e8": 98921
+},
+"good": "d7d8",
+"seen": 1
+},
+"5da7d0a859a58760": {
+"bad": {
+"d6e7": 549
+},
+"good": "d8d7",
+"seen": 1
+},
+"5f3994cd0ba3ac15": {
+"bad": {
+"f2g3": 98087
+},
+"good": "f2f3",
+"seen": 1
+},
+"6ac44ea4e2e67aa6": {
+"bad": {
+"g1f1": 459
+},
+"good": "g1h2",
+"seen": 1
+},
+"7ae8e05a5f849179": {
+"bad": {
+"g8e8": 97818
+},
+"good": "d7f7",
+"seen": 1
+},
+"7b644acb6bca63df": {
+"bad": {
+"c4d3": 98303
+},
+"good": "d7f7",
+"seen": 1
+},
+"7d78da25156b7fcb": {
+"bad": {
+"g6f5": 422
+},
+"good": "a6a1",
+"seen": 1
+},
+"866dbc3fe51a922f": {
+"bad": {
+"d4h4": 759
+},
+"good": "d4d2",
+"seen": 1
+},
+"86e11479b047cfde": {
+"bad": {
+"g3h4": 98463
+},
+"good": "c6e5",
+"seen": 1
+},
+"87f34724ab5141f0": {
+"bad": {
+"f5e6": 99159
+},
+"good": "b7c7",
+"seen": 1
+},
+"8e397ef5c354406a": {
+"bad": {
+"c3d3": 237
+},
+"good": "c3c4",
+"seen": 1
+},
+"8f23ac4e08851f17": {
+"bad": {
+"b8b2": 490
+},
+"good": "b8d8",
+"seen": 1
+},
+"9292707e28fb9cd9": {
+"bad": {
+"h5h6": 173
+},
+"good": "f5d7",
+"seen": 1
+},
+"96c8d57364df8842": {
+"bad": {
+"h2g3": 786
+},
+"good": "h2g1",
+"seen": 1
+},
+"9709689d96c3e9b2": {
+"bad": {
+"g8g7": 229
+},
+"good": "g8f8",
+"seen": 1
+},
+"98daa9df5b6f209f": {
+"bad": {
+"f7h7": 315
+},
+"good": "f7f6",
+"seen": 1
+},
+"9d4c7e8cf2e3e42b": {
+"bad": {
+"b3c4": 201
+},
+"good": "c3d4",
+"seen": 1
+},
+"9fc85b86de45430c": {
+"bad": {
+"a2a3": 289
+},
+"good": "h8g8",
+"seen": 1
+},
+"afa0bb77a6909f7d": {
+"bad": {
+"c4d5": 326
+},
+"good": "c3c2",
+"seen": 1
+},
+"b93f11c866adc475": {
+"bad": {
+"b3b2": 622
+},
+"good": "g3g2",
+"seen": 1
+},
+"b948b27f5fd06d6c": {
+"bad": {
+"b3b6": 268
+},
+"good": "h2g2",
+"seen": 1
+},
+"b9ea166d1b2d12f8": {
+"bad": {
+"e3e6": 98797
+},
+"good": "e3e4",
+"seen": 1
+},
+"bab4ceb8294bc8ec": {
+"bad": {
+"d4g7": 228
+},
+"good": "a8a7",
+"seen": 1
+},
+"bc23d1c78386cfd9": {
+"bad": {
+"e4e3": 181
+},
+"good": "e7d7",
+"seen": 1
+},
+"c2a73301112d3369": {
+"bad": {
+"d5b3": 296
+},
+"good": "d5g8",
+"seen": 1
+},
+"cd1930179cb5193c": {
+"bad": {
+"c1f1": 600
+},
+"good": "c1b1",
+"seen": 1
+},
+"ce9ef2e84eff85e2": {
+"bad": {
+"e5d4": 218
+},
+"good": "e5d6",
+"seen": 1
+},
+"d287143c06b96c73": {
+"bad": {
+"a8a6": 808
+},
+"good": "a8g8",
+"seen": 1
+},
+"da35d22b210f1eba": {
+"bad": {
+"c6d4": 97821
+},
+"good": "d7f7",
+"seen": 1
+},
+"db916fc3cb43bbfc": {
+"bad": {
+"e4e5": 206
+},
+"good": "e4d4",
+"seen": 1
+},
+"e1d7817cf572cb03": {
+"bad": {
+"h4g3": 302
+},
+"good": "d7d6",
+"seen": 1
+},
+"e4412ac2f04874e7": {
+"bad": {
+"b5c4": 156
+},
+"good": "e8g8",
+"seen": 1
+},
+"e44f5c988d3f9833": {
+"bad": {
+"d1d7": 489
+},
+"good": "d1d8",
+"seen": 1
+},
+"f5f4cccbba245e32": {
+"bad": {
+"a1c1": 629
+},
+"good": "d1e1",
+"seen": 1
+},
+"f810a7ff9c4ca94a": {
+"bad": {
+"b2b1q": 213
+},
+"good": "d7d6",
+"seen": 1
+},
+"f9e5254ba80d1f2f": {
+"bad": {
+"h2g2": 98895
+},
+"good": "h2h1",
+"seen": 1
+},
+"fca2428fccd2600f": {
+"bad": {
+"d1g4": 201
+},
+"good": "c3e2",
+"seen": 1
+}
+},
+"version": 1
+}
