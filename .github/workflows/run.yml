@@ -178,6 +178,7 @@ jobs:
       - name: Build variant engines
         run: |
           set -uo pipefail
+          set +e   # сборка любого движка — best effort, иначе bash -e уронит шаг
           # Специализированные движки под отдельные варианты. У них нет релизов,
           # поэтому собираем из исходников; неудачная сборка не валит job —
           # соответствующий вариант просто выключится на шаге Adapt config.
@@ -198,9 +199,16 @@ jobs:
               tail -n 15 "/tmp/${out}-build.log"
               return 1
             fi
-            bin=$(find "/tmp/build-${out}" -maxdepth 3 -type f -size +1M -executable | head -n1)
+            bin=$(find "/tmp/build-${out}" -type f -perm -u+x -size +300k \
+                    \( -name 'stockfish*' -o -name '*-stockfish' -o -name 'fsf*' \) | head -n1)
+            if [ -z "${bin}" ]; then
+              # Имя может быть любым — берём самый крупный исполняемый файл в src.
+              bin=$(find "/tmp/build-${out}/src" -maxdepth 1 -type f -perm -u+x -size +300k \
+                      -exec ls -S {} + 2>/dev/null | head -n1)
+            fi
             if [ -z "${bin}" ]; then
               echo "::warning::бинарник ${repo} не найден"
+              ls -l "/tmp/build-${out}/src" | head -n 20
               return 1
             fi
             install -m 755 "${bin}" "engines/${out}"
@@ -214,10 +222,10 @@ jobs:
             return 1
           }
 
-          build_one 3Check-Stockfish     threecheck-stockfish   3check
-          build_one KOTH-Stockfish       koth-stockfish         kingofthehill
-          build_one Antichess-Stockfish  antichess-stockfish    antichess
-          build_one Crazyhouse-Stockfish crazyhouse-stockfish  crazyhouse
+          build_one 3Check-Stockfish     threecheck-stockfish   3check      || true
+          build_one KOTH-Stockfish       koth-stockfish         kingofthehill || true
+          build_one Antichess-Stockfish  antichess-stockfish    antichess  || true
+          build_one Crazyhouse-Stockfish crazyhouse-stockfish  crazyhouse  || true
 
           echo "--- итог ---"
           ls -l engines
