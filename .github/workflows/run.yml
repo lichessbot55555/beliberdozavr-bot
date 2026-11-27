@@ -56,21 +56,79 @@ jobs:
       - name: Setup Engines
         run: |
           set -euo pipefail
-          chmod +x engines/stockfish
-          # Specialized variant engines: Atomic-Stockfish (~+150 Elo over Fairy) and
-          # Horde-Stockfish (~+350 Elo over Fairy) according to their author's panels.
+          mkdir -p engines
+
+          # --- Stockfish: standard chess and chess960 ---
+          # The binary is not stored in the repository, so fetch the official release
+          # and take whatever x86-64 Linux asset the API advertises.
+          api="https://api.github.com/repos/official-stockfish/Stockfish/releases/latest"
+          url=$(curl -fsSL "$api" \
+            | grep -oE '"browser_download_url": *"[^"]*stockfish-linux-x86-64[^"]*\.tar\.gz"' \
+            | head -n1 | sed -E 's/.*"(https:[^"]+)"/\1/' || true)
+          if [ -z "${url}" ]; then
+            url="https://github.com/official-stockfish/Stockfish/releases/latest/download/stockfish-linux-x86-64-universal.tar.gz"
+          fi
+          echo "Stockfish: ${url}"
+          curl -fsSL --retry 3 --retry-delay 2 -o /tmp/sf.tar "$url"
+          rm -rf /tmp/sf-dist && mkdir -p /tmp/sf-dist
+          tar -xf /tmp/sf.tar -C /tmp/sf-dist
+          binary=$(find /tmp/sf-dist -type f -size +1M -name 'stockfish*' | head -n1)
+          test -n "${binary}"
+          install -m 755 "${binary}" engines/stockfish
+          find /tmp/sf-dist -name '*.nnue' -exec cp {} engines/ \; 2>/dev/null || true
+          printf 'uci\nquit\n' | ./engines/stockfish | grep -m1 'id name'
+
+          # --- Atomic-Stockfish: needed for the atomic variant ---
+          base="https://github.com/Belzedar94/Atomic-Stockfish/releases/download/rolling-main"
           for build in atomic-stockfish-linux-x86-64-bmi2 atomic-stockfish-linux-x86-64-avx2 atomic-stockfish-linux-x86-64-sse41-popcnt; do
-            if curl -fsSL --retry 3 -o engines/atomic-stockfish \
-               "https://github.com/Belzedar94/Atomic-Stockfish/releases/download/rolling-main/${build}"; then
-              chmod +x engines/atomic-stockfish && break
+            echo "Trying ${build}"
+            if ! curl -fsSL --retry 3 --retry-delay 2 -o engines/atomic-stockfish "${base}/${build}"; then
+              echo "::warning::download failed for ${build}"
+              continue
             fi
+            chmod +x engines/atomic-stockfish
+            if printf 'uci\nquit\n' | ./engines/atomic-stockfish > /tmp/atomic-uci.txt 2>/dev/null \
+               && grep -q 'UCI_Variant' /tmp/atomic-uci.txt; then
+              grep -m1 'id name' /tmp/atomic-uci.txt
+              echo "Using ${build}"
+              break
+            fi
+            echo "::warning::${build} does not run here"
+            rm -f engines/atomic-stockfish
           done
-          curl -fsSL --retry 3 -o /tmp/horde.tar.xz \
-            "https://github.com/Belzedar94/Horde-Stockfish/releases/download/v1.0.0/Horde-Stockfish-1.0.0-linux-x86-64-bmi2.tar.xz"
-          rm -rf /tmp/horde && mkdir -p /tmp/horde && tar -xf /tmp/horde.tar.xz -C /tmp/horde
-          install -m 755 "$(find /tmp/horde -type f -name horde-stockfish | head -n1)" engines/horde-stockfish
-          printf 'uci\nquit\n' | ./engines/atomic-stockfish | grep -m1 'id name'
-          printf 'uci\nquit\n' | ./engines/horde-stockfish | grep -m1 'id name'
+          # Fail before a game starts rather than in the middle of an atomic game.
+          test -x engines/atomic-stockfish
+          grep -q 'UCI_Variant' /tmp/atomic-uci.txt
+
+          # --- Horde-Stockfish: needed for the horde variant ---
+          base="https://github.com/Belzedar94/Horde-Stockfish/releases/download/v1.0.0"
+          installed=""
+          for build in Horde-Stockfish-1.0.0-linux-x86-64-bmi2 Horde-Stockfish-1.0.0-linux-x86-64-avx2; do
+            echo "Trying ${build}"
+            if ! curl -fsSL --retry 3 --retry-delay 2 -o /tmp/horde.tar.xz "${base}/${build}.tar.xz"; then
+              echo "::warning::download failed for ${build}"
+              continue
+            fi
+            rm -rf /tmp/horde-dist && mkdir -p /tmp/horde-dist
+            tar -xf /tmp/horde.tar.xz -C /tmp/horde-dist
+            binary=$(find /tmp/horde-dist -type f -name 'horde-stockfish' | head -n1)
+            test -n "${binary}" || continue
+            install -m 755 "${binary}" engines/horde-stockfish || continue
+            printf 'uci\nquit\n' | ./engines/horde-stockfish > /tmp/horde-uci.txt 2>&1 || true
+            if grep -q 'UCI_Variant' /tmp/horde-uci.txt; then
+              grep -m1 'id name' /tmp/horde-uci.txt
+              echo "Using ${build}"
+              installed="yes"
+              break
+            fi
+            echo "::warning::${build} does not run here"
+            rm -f engines/horde-stockfish
+          done
+          if [ -z "${installed}" ]; then
+            echo "::error::Horde-Stockfish could not run on this runner, but it is configured in config.yml."
+            exit 1
+          fi
+
           ls -l engines
 
       - name: Inject Lichess Bot Token
