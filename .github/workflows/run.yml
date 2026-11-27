@@ -1,0 +1,202 @@
+name: Lichess Bot Runner
+
+# Запускает BotLi для аккаунта BeliberdoZavr на GitHub Actions.
+# Перед запуском бота есть шаг Preflight: он проверяет токен и печатает
+# аккаунт, статус BOT и список прав — если что-то не так, в логе будет
+# понятная строка с ::error:: вместо молчаливого выхода с кодом 1.
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Команда для BotLi (пусто = matchmaking)'
+        type: string
+        required: false
+        default: 'matchmaking'
+  schedule:
+    - cron: '0 */6 * * *'  # перезапуск каждые 6 часов
+  push:
+    branches: [ main ]
+    paths:
+      - '**.py'
+      - 'config.yml'
+      - '.github/workflows/run.yml'
+
+concurrency:
+  group: lichess-bot-runner
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  BOT_USERNAME: BeliberdoZavr
+  RUN_SECONDS: '19800'   # 5.5 часа, меньше лимита GitHub
+
+jobs:
+  bot-runner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Setup Engines
+        run: |
+          set -euo pipefail
+          chmod +x engines/stockfish
+          # Specialized variant engines: Atomic-Stockfish (~+150 Elo over Fairy) and
+          # Horde-Stockfish (~+350 Elo over Fairy) according to their author's panels.
+          for build in atomic-stockfish-linux-x86-64-bmi2 atomic-stockfish-linux-x86-64-avx2 atomic-stockfish-linux-x86-64-sse41-popcnt; do
+            if curl -fsSL --retry 3 -o engines/atomic-stockfish \
+               "https://github.com/Belzedar94/Atomic-Stockfish/releases/download/rolling-main/${build}"; then
+              chmod +x engines/atomic-stockfish && break
+            fi
+          done
+          curl -fsSL --retry 3 -o /tmp/horde.tar.xz \
+            "https://github.com/Belzedar94/Horde-Stockfish/releases/download/v1.0.0/Horde-Stockfish-1.0.0-linux-x86-64-bmi2.tar.xz"
+          rm -rf /tmp/horde && mkdir -p /tmp/horde && tar -xf /tmp/horde.tar.xz -C /tmp/horde
+          install -m 755 "$(find /tmp/horde -type f -name horde-stockfish | head -n1)" engines/horde-stockfish
+          printf 'uci\nquit\n' | ./engines/atomic-stockfish | grep -m1 'id name'
+          printf 'uci\nquit\n' | ./engines/horde-stockfish | grep -m1 'id name'
+          ls -l engines
+
+      - name: Inject Lichess Bot Token
+        env:
+          LICHESS_TOKEN: ${{ secrets.LICHESS_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import os, sys, yaml
+          token = (os.environ.get("LICHESS_TOKEN") or "").strip()
+          if not token:
+              print("::error::Секрет LICHESS_TOKEN пуст. Settings -> Secrets and variables -> Actions")
+              sys.exit(1)
+          with open("config.yml", "r") as f:
+              config = yaml.safe_load(f) or {}
+          config["token"] = token
+          with open("config.yml", "w") as f:
+              yaml.dump(config, f, default_flow_style=False)
+          print("Токен подставлен в config.yml")
+          EOF
+
+      - name: Preflight - validate token
+        env:
+          LICHESS_TOKEN: ${{ secrets.LICHESS_TOKEN }}
+        run: |
+          python3 << 'EOF'
+          import json, os, sys, urllib.request
+          token = (os.environ.get("LICHESS_TOKEN") or "").strip()
+          if not token:
+              print("::error::Секрет LICHESS_TOKEN пуст")
+              sys.exit(1)
+
+          # Права токена читаем ровно так, как это делает сам BotLi:
+          # POST /api/token/test. Поле scopes в /api/account пустое,
+          # опираться на него нельзя.
+          test_req = urllib.request.Request(
+              "https://lichess.org/api/token/test",
+              data=token.encode(),
+              headers={"Content-Type": "text/plain"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(test_req, timeout=30) as r:
+                  info = json.load(r).get(token)
+          except Exception as e:
+              print(f"::error::Не удалось проверить токен: {e}")
+              sys.exit(1)
+
+          if not info:
+              print("::error::Lichess считает токен недействительным (token/test вернул null). Создайте новый.")
+              sys.exit(1)
+
+          scopes = info.get("scopes") or ""
+          print(f'token userId={info.get("userId")} scopes=[{scopes}]')
+
+          if "bot:play" not in scopes:
+              print("::error::У токена нет права bot:play. Создайте новый: https://lichess.org/account/oauth/token/create?scopes[]=bot:play&description=BotLi")
+              sys.exit(1)
+
+          acc_req = urllib.request.Request(
+              "https://lichess.org/api/account",
+              headers={"Authorization": f"Bearer {token}"},
+          )
+          try:
+              with urllib.request.urlopen(acc_req, timeout=30) as r:
+                  acc = json.load(r)
+          except Exception as e:
+              print(f"::error::Lichess отклонил токен: {e}")
+              sys.exit(1)
+
+          print(f'account={acc.get("username")} title={acc.get("title")}')
+          if acc.get("title") != "BOT":
+              print("::error::Аккаунт не переведён в BOT. Сначала запустите BotLi с флагом --upgrade.")
+              sys.exit(1)
+
+          print("Preflight OK")
+          EOF
+
+      - name: Run Bot
+        run: |
+          CMD="${{ inputs.command }}"
+          if [ -z "$CMD" ]; then CMD="matchmaking"; fi
+          echo "Команда BotLi: $CMD"
+          set +e
+          timeout --signal=TERM --kill-after=60 "$RUN_SECONDS" python3 -u user_interface.py "$CMD"
+          RC=$?
+          set -e
+          if [ "$RC" -eq 124 ] || [ "$RC" -eq 143 ]; then
+            echo "Бот отработал запланированные 5.5 часа и остановлен (rc=$RC)"
+            exit 0
+          fi
+          echo "::error::Бот завершился с кодом $RC"
+          exit "$RC"
+
+      - name: Learn from the games
+        if: always()
+        continue-on-error: true
+        run: |
+          python3 learn_mistakes.py \
+            --book mistakes.json \
+            --config config.yml \
+            --username "$BOT_USERNAME" \
+            --depth 12 --threshold 150 --max-games 40
+
+      - name: Commit the remembered mistakes
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ ! -f mistakes.json ]; then
+            echo "No mistake book to commit."
+            exit 0
+          fi
+          git config user.name "botli-bot"
+          git config user.email "botli-bot@users.noreply.github.com"
+          git add mistakes.json
+          if git diff --cached --quiet; then
+            echo "No new mistakes this session."
+            exit 0
+          fi
+          git commit -m "Remember new mistakes"
+          git push origin HEAD:main
+
+      - name: Upload game records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-records-${{ github.run_number }}
+          path: game_records/
+          retention-days: 7
+          if-no-files-found: ignore
