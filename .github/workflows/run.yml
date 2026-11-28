@@ -1,4 +1,4 @@
-﻿name: Lichess Bot Runner
+name: Lichess Bot Runner
 
 # Запускает BotLi для аккаунта BeliberdoZavr на GitHub Actions.
 # Перед запуском бота есть шаг Preflight: он проверяет токен и печатает
@@ -286,6 +286,61 @@ jobs:
           print("варианты:", ", ".join(variants))
           if dropped:
               print("::warning::движки недоступны, отключены:", ", ".join(dropped))
+          EOF
+
+      - name: Verify engines with BotLi
+        run: |
+          # Финальная проверка тем же кодом, которым BotLi тестирует движки на
+          # старте. Грубая проба в сборке может пропустить движок, который
+          # отвечает на go, но падает под настоящими настройками (так было с
+          # threecheck: процесс умирал с кодом 1). Всё, что не прошло, убираем
+          # из конфига вместе с его вариантом — тогда бот гарантированно стартует.
+          python3 << 'EOF'
+          import asyncio, sys, yaml
+
+          sys.path.insert(0, ".")
+          from config import Config
+          from engine import Engine
+
+          VARIANT_TO_ENGINE = {
+              "atomic": "atomic",
+              "horde": "horde",
+              "antichess": "antichess",
+              "crazyhouse": "crazyhouse",
+              "threeCheck": "threecheck",
+              "kingOfTheHill": "kingofthehill",
+              "racingKings": "racingkings",
+          }
+
+          cfg = Config.from_yaml("config.yml")
+          good, bad = [], []
+
+          async def check() -> None:
+              for name, engine_config in list(cfg.engines.items()):
+                  try:
+                      await Engine.test(engine_config)
+                      good.append(name)
+                  except Exception as exc:
+                      bad.append((name, type(exc).__name__))
+
+          asyncio.run(check())
+          print("прошли тест:", ", ".join(good))
+          if not bad:
+              print("все движки рабочие")
+              sys.exit(0)
+
+          print("::warning::не прошли тест:", ", ".join(f"{n} ({e})" for n, e in bad))
+          raw = yaml.safe_load(open("config.yml", encoding="utf-8"))
+          for name, _ in bad:
+              raw["engines"].pop(name, None)
+          raw["challenge"]["variants"] = [
+              v for v in raw["challenge"]["variants"]
+              if v in ("standard", "chess960") or VARIANT_TO_ENGINE.get(v, v) in raw["engines"]
+          ]
+          with open("config.yml", "w", encoding="utf-8") as f:
+              yaml.dump(raw, f, default_flow_style=False, allow_unicode=True)
+          print("движки в конфиге:", ", ".join(sorted(raw["engines"])))
+          print("варианты:", ", ".join(raw["challenge"]["variants"]))
           EOF
 
       - name: Inject Lichess Bot Token
