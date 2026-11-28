@@ -226,9 +226,11 @@ matchmaking:
     atomic_1_0:                           # 60+0, атомик.
       tc: 1+0
       variant: atomic
+      weight: 10
     atomic_3_1:                           # 3+1, атомик.
       tc: 3+1
       variant: atomic
+      weight: 10
 #   casual_chess960:
 #     tc: 8+1
 #     rated: false
