@@ -4,13 +4,13 @@ engines:
   standard:                               # Engine used for standard chess and when no suitable special engine is configured.
     dir: "./engines"                      # Directory containing the engine.
     name: "stockfish"             # Binary name of the engine to use.
-    ponder: true                          # Думает на времени соперника.
+    ponder: false                         # Think on opponent's time.
     silence_stderr: false                 # Suppresses stderr output.
     move_overhead_multiplier: 1.0         # Increase if your bot flags games too often. Default move overhead is 1 second per 1 minute initital time.
     uci_options:                          # Arbitrary UCI options passed to the engine.
-      Threads: 2                          # 2 партии x 2 потока = 4 ядра раннера.
-      Hash: 512                           # 2 партии x 512 МБ.
-      Move Overhead: 150                  # Меньше запас — больше времени на ход.
+      Threads: 1                          # Max CPU threads the engine can use.
+      Hash: 256                           # Max memory (in megabytes) the engine can allocate.
+      Move Overhead: 200                  # Increase if your bot flags games too often.
     limits:                               # Limits that end the move calculation early.
 #     time: 5.0                           # Max time per move in seconds.
 #     depth: 26                           # Max depth per move.
@@ -22,7 +22,7 @@ engines:
     silence_stderr: false
     move_overhead_multiplier: 1.0
     uci_options:
-      Threads: 2
+      Threads: 3
       Hash: 1024
       Move Overhead: 300
     limits:
@@ -33,74 +33,8 @@ engines:
     silence_stderr: false
     move_overhead_multiplier: 1.0
     uci_options:
-      Threads: 2
+      Threads: 3
       Hash: 1024
-      Move Overhead: 300
-    limits:
-  antichess:                              # Antichess-Stockfish (Fairy-Stockfish derivative).
-    dir: "./engines"
-    name: "antichess-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
-      Move Overhead: 300
-    limits:
-  crazyhouse:                             # Crazyhouse-Stockfish.
-    dir: "./engines"
-    name: "fairy-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
-      Move Overhead: 300
-    limits:
-  threecheck:                             # 3Check-Stockfish.
-    dir: "./engines"
-    name: "threecheck-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
-      Move Overhead: 300
-    limits:
-  kingofthehill:                          # KOTH-Stockfish (Fairy-Stockfish derivative).
-    dir: "./engines"
-    name: "koth-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
-      Move Overhead: 300
-    limits:
-  racingkings:                            # Отдельного движка нет — играет Fairy-Stockfish.
-    dir: "./engines"
-    name: "fairy-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
-      Move Overhead: 300
-    limits:
-  variants:                               # Любой вариант без своего движка.
-    dir: "./engines"
-    name: "fairy-stockfish"
-    ponder: false
-    silence_stderr: false
-    move_overhead_multiplier: 1.0
-    uci_options:
-      Threads: 2
-      Hash: 512
       Move Overhead: 300
     limits:
 # variants:                               # Engine used for variants when no suitable special engine is configured.
@@ -240,7 +174,7 @@ resign:
 # min_rating: 2300                        # Minimum rating of opponent to resign.
 
 challenge:                                # Incoming challenges.
-  concurrency: 2                           # 2 партии по 2 потока = 4 ядра без переподписки.
+  concurrency: 4                           # Number of games to play simultaneously.
   max_takebacks: 3                        # Maximum number of takebacks granted to a human.
   bullet_with_increment_only: false       # false = принимать пулю без добавки (30+0 и 60+0). true заблокировал бы их.
   min_increment: 0                        # Минимальная добавка: 0 обязателен для 30+0 и 60+0.
@@ -252,12 +186,14 @@ challenge:                                # Incoming challenges.
     - chess960
     - atomic
     - horde
-    - antichess
-    - crazyhouse
-    - threeCheck
-    - kingOfTheHill
-    - racingKings
-#   - fromPosition                       # Не поддерживается движками так же хорошо, оставляем выключенным.
+#   - fromPosition
+#   - antichess
+#   - atomic
+#   - crazyhouse
+#   - horde
+#   - kingOfTheHill
+#   - racingKings
+#   - threeCheck
   bot_time_controls:                      # Speeds or time controls in initial_minutes+increment_seconds format to accept against BOTs.
     - bullet
     - blitz
