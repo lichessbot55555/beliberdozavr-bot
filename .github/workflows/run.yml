@@ -1,4 +1,4 @@
-name: Lichess Bot Runner
+﻿name: Lichess Bot Runner
 
 # Запускает BotLi для аккаунта BeliberdoZavr на GitHub Actions.
 # Перед запуском бота есть шаг Preflight: он проверяет токен и печатает
@@ -238,7 +238,6 @@ jobs:
           build_one 3Check-Stockfish     threecheck-stockfish   3check      || true
           build_one KOTH-Stockfish       koth-stockfish         kingofthehill || true
           build_one Antichess-Stockfish  antichess-stockfish    antichess  || true
-          build_one Crazyhouse-Stockfish crazyhouse-stockfish  crazyhouse  || true
 
           echo "--- итог ---"
           ls -l engines
@@ -379,7 +378,7 @@ jobs:
           # Страховка от «тихого» зависания: однажды бот застрял на тесте движка
           # и простоял так все 5.5 часа, а job при этом считался успешным.
           STARTED=""
-          for _ in $(seq 1 36); do
+          for _ in $(seq 1 72); do
             sleep 5
             if grep -q 'Starting matchmaking\|Starting tournament' "$LOG"; then
               STARTED="yes"
@@ -391,7 +390,7 @@ jobs:
           done
 
           if [ -z "$STARTED" ] && kill -0 "$BOT_PID" 2>/dev/null; then
-            echo "::error::Бот не дошёл до matchmaking за 3 минуты — вероятно, завис на тесте движка"
+            echo "::error::Бот не дошёл до matchmaking за 6 минут — вероятно, завис на тесте движка"
             tail -n 80 "$LOG"
             kill -TERM "$BOT_PID" 2>/dev/null
             sleep 5

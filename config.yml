@@ -50,7 +50,7 @@ engines:
     limits:
   crazyhouse:                             # Crazyhouse-Stockfish.
     dir: "./engines"
-    name: "crazyhouse-stockfish"
+    name: "fairy-stockfish"
     ponder: false
     silence_stderr: false
     move_overhead_multiplier: 1.0
