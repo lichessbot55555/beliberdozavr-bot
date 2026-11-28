@@ -423,11 +423,12 @@ jobs:
           CMD="${{ inputs.command }}"
           if [ -z "$CMD" ]; then CMD="matchmaking"; fi
           echo "Команда BotLi: $CMD"
-          LOG=/tmp/bot.log
+          LOG=bot-run.log
           : > "$LOG"
           set +e
+          # tee: лог виден в job сразу и остаётся файлом для артефакта.
           timeout --signal=TERM --kill-after=60 "$RUN_SECONDS" \
-            python3 -u user_interface.py "$CMD" > "$LOG" 2>&1 &
+            python3 -u user_interface.py "$CMD" > >(tee -a "$LOG") 2>&1 &
           BOT_PID=$!
 
           # Страховка от «тихого» зависания: однажды бот застрял на тесте движка
@@ -499,6 +500,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: game-records-${{ github.run_number }}
-          path: game_records/
+          path: |
+            game_records/
+            bot-run.log
           retention-days: 7
           if-no-files-found: ignore
