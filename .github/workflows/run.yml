@@ -212,14 +212,26 @@ jobs:
               return 1
             fi
             install -m 755 "${bin}" "engines/${out}"
-            if printf 'uci\nquit\n' | "./engines/${out}" > "/tmp/${out}-uci.txt" 2>/dev/null \
-               && grep -qi "var ${variant}" "/tmp/${out}-uci.txt"; then
-              grep -m1 'id name' "/tmp/${out}-uci.txt"
-              return 0
+            if ! printf 'uci\nquit\n' | timeout 30 "./engines/${out}" > "/tmp/${out}-uci.txt" 2>/dev/null \
+               || ! grep -qi "var ${variant}" "/tmp/${out}-uci.txt"; then
+              echo "::warning::${out} не поддерживает вариант ${variant}"
+              rm -f "engines/${out}"
+              return 1
             fi
-            echo "::warning::${out} не поддерживает вариант ${variant}"
-            rm -f "engines/${out}"
-            return 1
+            # Главная проверка: движок обязан реально отдать ход. Именно на этом
+            # завис Crazyhouse-Stockfish — на uci он отвечал, а на поиск нет,
+            # и бот стоял на старте все 5.5 часа.
+            if ! printf 'uci\nisready\nposition startpos\ngo depth 8\nquit\n' \
+                 | timeout 45 "./engines/${out}" > "/tmp/${out}-search.txt" 2>&1 \
+               || ! grep -q 'bestmove' "/tmp/${out}-search.txt"; then
+              echo "::warning::${out} не отвечает на поиск хода за 45 секунд — движок отброшен"
+              tail -n 10 "/tmp/${out}-search.txt"
+              rm -f "engines/${out}"
+              return 1
+            fi
+            grep -m1 'id name' "/tmp/${out}-uci.txt"
+            grep -m1 'bestmove' "/tmp/${out}-search.txt"
+            return 0
           }
 
           build_one 3Check-Stockfish     threecheck-stockfish   3check      || true
@@ -356,10 +368,42 @@ jobs:
           CMD="${{ inputs.command }}"
           if [ -z "$CMD" ]; then CMD="matchmaking"; fi
           echo "Команда BotLi: $CMD"
+          LOG=/tmp/bot.log
+          : > "$LOG"
           set +e
-          timeout --signal=TERM --kill-after=60 "$RUN_SECONDS" python3 -u user_interface.py "$CMD"
+          timeout --signal=TERM --kill-after=60 "$RUN_SECONDS" \
+            python3 -u user_interface.py "$CMD" > "$LOG" 2>&1 &
+          BOT_PID=$!
+
+          # Страховка от «тихого» зависания: однажды бот застрял на тесте движка
+          # и простоял так все 5.5 часа, а job при этом считался успешным.
+          STARTED=""
+          for _ in $(seq 1 36); do
+            sleep 5
+            if grep -q 'Starting matchmaking\|Starting tournament' "$LOG"; then
+              STARTED="yes"
+              break
+            fi
+            if ! kill -0 "$BOT_PID" 2>/dev/null; then
+              break
+            fi
+          done
+
+          if [ -z "$STARTED" ] && kill -0 "$BOT_PID" 2>/dev/null; then
+            echo "::error::Бот не дошёл до matchmaking за 3 минуты — вероятно, завис на тесте движка"
+            tail -n 80 "$LOG"
+            kill -TERM "$BOT_PID" 2>/dev/null
+            sleep 5
+            kill -KILL "$BOT_PID" 2>/dev/null
+            exit 1
+          fi
+
+          echo "Бот работает, ждём завершения по таймауту"
+          wait "$BOT_PID"
           RC=$?
           set -e
+          echo "--- последние строки лога ---"
+          tail -n 60 "$LOG" 2>/dev/null || true
           if [ "$RC" -eq 124 ] || [ "$RC" -eq 143 ]; then
             echo "Бот отработал запланированные 5.5 часа и остановлен (rc=$RC)"
             exit 0

@@ -44,7 +44,18 @@ class Engine:
         transport, engine = await chess.engine.popen_uci(engine_config.path, stderr=stderr)
         await cls._configure_engine(engine, engine_config, SyzygyConfig(False, [], 0, False))
         board = cls._get_test_board(engine)
-        result = await engine.play(board, chess.engine.Limit(time=0.1), info=chess.engine.INFO_ALL)
+        # Движок может отвечать на uci и при этом зависать на поиске хода
+        # (так вёл себя Crazyhouse-Stockfish). Без таймаута бот стоит на старте
+        # бесконечно, поэтому ограничиваем проверку.
+        try:
+            result = await asyncio.wait_for(
+                engine.play(board, chess.engine.Limit(time=0.1), info=chess.engine.INFO_ALL),
+                timeout=60,
+            )
+        except asyncio.TimeoutError:
+            await engine.quit()
+            transport.close()
+            raise RuntimeError(f'Engine "{engine_config.path}" did not answer a move within 60 s.') from None
 
         if not result.move:
             raise RuntimeError("Engine could not make a move!")
