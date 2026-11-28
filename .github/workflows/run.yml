@@ -218,13 +218,14 @@ jobs:
               rm -f "engines/${out}"
               return 1
             fi
-            # Главная проверка: движок обязан реально отдать ход. Именно на этом
-            # завис Crazyhouse-Stockfish — на uci он отвечал, а на поиск нет,
-            # и бот стоял на старте все 5.5 часа.
-            if ! printf 'uci\nisready\nposition startpos\ngo depth 8\nquit\n' \
+            # Главная проверка: движок обязан отдать ход именно в СВОЁМ варианте —
+            # BotLi выставляет UCI_Variant перед игрой. Crazyhouse-Stockfish на
+            # стандартной позиции отвечал, а в crazyhouse зависал, и бот стоял на
+            # старте все 5.5 часа. Поэтому вариант выставляем так же, как BotLi.
+            if ! printf 'uci\nsetoption name UCI_Variant value %s\nisready\nposition startpos\ngo depth 8\nquit\n' "${variant}" \
                  | timeout 45 "./engines/${out}" > "/tmp/${out}-search.txt" 2>&1 \
                || ! grep -q 'bestmove' "/tmp/${out}-search.txt"; then
-              echo "::warning::${out} не отвечает на поиск хода за 45 секунд — движок отброшен"
+              echo "::warning::${out} не отдаёт ход в варианте ${variant} за 45 секунд — движок отброшен"
               tail -n 10 "/tmp/${out}-search.txt"
               rm -f "engines/${out}"
               return 1
